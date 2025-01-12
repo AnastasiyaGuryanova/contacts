@@ -1,31 +1,56 @@
-import React, {memo, useEffect, useState} from 'react';
-import {CommonPageProps} from './types';
-import {Col, Row} from 'react-bootstrap';
-import {useParams} from 'react-router-dom';
-import {ContactDto} from 'src/types/dto/ContactDto';
-import {GroupContactsDto} from 'src/types/dto/GroupContactsDto';
-import {GroupContactsCard} from 'src/components/GroupContactsCard';
-import {Empty} from 'src/components/Empty';
-import {ContactCard} from 'src/components/ContactCard';
+import { memo, useEffect, useState } from "react";
+import { Col, Row } from "react-bootstrap";
+import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import { ContactDto, GroupContactsDto } from "src/types/dto";
+import {
+  GroupContactsCard,
+  Loader,
+  Empty,
+  ContactCard,
+  ErrorMessage,
+} from "src/components";
+import { RootState } from "src/redux/reducers";
 
-export const GroupPage = memo<CommonPageProps>(({
-  contactsState,
-  groupContactsState
-}) => {
-  const {groupId} = useParams<{ groupId: string }>();
+export const GroupPage = memo(() => {
+  const { groupId } = useParams<{ groupId: string }>();
+
+  const {
+    items: groupContactsState,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.groups);
+  const { items: contactsState } = useSelector(
+    (state: RootState) => state.contacts
+  );
+
   const [contacts, setContacts] = useState<ContactDto[]>([]);
-  const [groupContacts, setGroupContacts] = useState<GroupContactsDto>();
+  const [groupContacts, setGroupContacts] = useState<
+    GroupContactsDto | undefined
+  >(undefined);
 
   useEffect(() => {
-    const findGroup = groupContactsState[0].find(({id}) => id === groupId);
+    const findGroup = groupContactsState.find(({ id }) => id === groupId);
     setGroupContacts(findGroup);
-    setContacts(() => {
-      if (findGroup) {
-        return contactsState[0].filter(({id}) => findGroup.contactIds.includes(id))
-      }
-      return [];
-    });
-  }, [groupId]);
+    setContacts(
+      findGroup
+        ? contactsState.filter(({ id }) => findGroup.contactIds.includes(id))
+        : []
+    );
+  }, [groupId, groupContactsState, contactsState]);
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return (
+      <ErrorMessage
+        message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
+        logError={error}
+      />
+    );
+  }
 
   return (
     <Row className="g-4">
@@ -48,7 +73,9 @@ export const GroupPage = memo<CommonPageProps>(({
             </Row>
           </Col>
         </>
-      ) : <Empty />}
+      ) : (
+        <Empty />
+      )}
     </Row>
   );
 });

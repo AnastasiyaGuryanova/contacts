@@ -1,25 +1,36 @@
-import React, {FC, useEffect, useState} from 'react';
-import {CommonPageProps} from './types';
-import {Col, Row} from 'react-bootstrap';
-import {useParams} from 'react-router-dom';
-import {ContactDto} from 'src/types/dto/ContactDto';
-import {ContactCard} from 'src/components/ContactCard';
-import {Empty} from 'src/components/Empty';
+import { FC } from "react";
+import { Col, Row } from "react-bootstrap";
+import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import { ContactCard, Empty, Loader, ErrorMessage } from "src/components";
+import { RootState } from "src/redux/reducers";
 
+export const ContactPage: FC = () => {
+  const { contactId } = useParams<{ contactId: string }>();
+  const {
+    items: contactsState,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.contacts);
 
-export const ContactPage: FC<CommonPageProps> = ({
-  contactsState
-}) => {
-  const {contactId} = useParams<{ contactId: string }>();
-  const [contact, setContact] = useState<ContactDto>();
+  const contact = contactsState.find(({ id }) => id === contactId);
 
-  useEffect(() => {
-    setContact(() => contactsState[0].find(({id}) => id === contactId));
-  }, [contactId]);
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return (
+      <ErrorMessage
+        message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
+        logError={error}
+      />
+    );
+  }
 
   return (
     <Row xxl={3}>
-      <Col className={'mx-auto'}>
+      <Col className={"mx-auto"}>
         {contact ? <ContactCard contact={contact} /> : <Empty />}
       </Col>
     </Row>
