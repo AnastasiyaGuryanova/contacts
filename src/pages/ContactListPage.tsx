@@ -7,27 +7,25 @@ import {
   Loader,
   ErrorMessage,
 } from "src/components";
-import { RootState } from "src/redux/reducers";
-import { useSelector } from "react-redux";
+import { useGetContactsQuery } from "src/redux/contacts";
+import { useGetGroupsQuery } from "src/redux/groups";
+
+import { ContactDto } from "src/types/dto";
 
 export const ContactListPage = memo(() => {
-  const {
-    items: contactsState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.contacts);
-  const { items: groupContactsState } = useSelector(
-    (state: RootState) => state.groups
-  );
+  const { data: contactsState = [], isLoading, error } = useGetContactsQuery();
+  const { data: groupContactsState = [] } = useGetGroupsQuery();
 
-  const [filteredContacts, setFilteredContacts] = useState(contactsState);
+  const [filteredContacts, setFilteredContacts] = useState<ContactDto[]>([]);
 
   useEffect(() => {
-    setFilteredContacts(contactsState);
+    if (contactsState.length) {
+      setFilteredContacts(contactsState);
+    }
   }, [contactsState]);
 
   const onSubmit = (fv: Partial<FilterFormValues>): void => {
-    let findContacts = contactsState;
+    let findContacts: ContactDto[] = contactsState;
 
     if (fv.name) {
       const fvName = fv.name.toLowerCase();
@@ -51,7 +49,7 @@ export const ContactListPage = memo(() => {
     setFilteredContacts(findContacts);
   };
 
-  if (loading) {
+  if (isLoading) {
     return <Loader />;
   }
 
@@ -59,7 +57,7 @@ export const ContactListPage = memo(() => {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(error)}
       />
     );
   }
@@ -79,7 +77,7 @@ export const ContactListPage = memo(() => {
       </Col>
       <Col>
         <Row xxl={4} className="g-4">
-          {filteredContacts.map((contact) => (
+          {filteredContacts.map((contact: ContactDto) => (
             <Col key={contact.id}>
               <ContactCard contact={contact} withLink />
             </Col>

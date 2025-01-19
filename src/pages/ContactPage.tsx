@@ -1,21 +1,16 @@
 import { FC } from "react";
 import { Col, Row } from "react-bootstrap";
-import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { ContactCard, Empty, Loader, ErrorMessage } from "src/components";
-import { RootState } from "src/redux/reducers";
+import { useGetContactsQuery } from "src/redux/contacts";
 
 export const ContactPage: FC = () => {
   const { contactId } = useParams<{ contactId: string }>();
-  const {
-    items: contactsState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.contacts);
+  const { data: contacts = [], isLoading, error } = useGetContactsQuery();
 
-  const contact = contactsState.find(({ id }) => id === contactId);
+  const contact = contacts.find(({ id }) => id === contactId);
 
-  if (loading) {
+  if (isLoading) {
     return <Loader />;
   }
 
@@ -23,7 +18,7 @@ export const ContactPage: FC = () => {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(error)}
       />
     );
   }
