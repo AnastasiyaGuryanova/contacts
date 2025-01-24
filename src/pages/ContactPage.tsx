@@ -1,13 +1,14 @@
 import { FC } from "react";
-import { Col, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
+import { observer } from "mobx-react-lite";
+import { Col, Row } from "react-bootstrap";
 import { ContactCard, Empty, Loader, ErrorMessage } from "src/components";
-import { useGetContactsQuery } from "src/redux/contacts";
+import { contactsStore } from "src/stores";
 
-export const ContactPage: FC = () => {
+export const ContactPage: FC = observer(() => {
   const { contactId } = useParams<{ contactId: string }>();
-  const { data: contacts = [], isLoading, error } = useGetContactsQuery();
 
+  const { contacts, isLoading, error } = contactsStore;
   const contact = contacts.find(({ id }) => id === contactId);
 
   if (isLoading) {
@@ -30,4 +31,4 @@ export const ContactPage: FC = () => {
       </Col>
     </Row>
   );
-};
+});

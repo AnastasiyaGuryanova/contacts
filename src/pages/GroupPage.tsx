@@ -1,4 +1,5 @@
-import { memo } from "react";
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Col, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import {
@@ -8,22 +9,22 @@ import {
   ContactCard,
   ErrorMessage,
 } from "src/components";
-import { useGetGroupsQuery } from "src/redux/groups";
-import { useGetContactsQuery } from "src/redux/contacts";
+import { contactsStore, groupsStore } from "src/stores";
 
-export const GroupPage = memo(() => {
+export const GroupPage = observer(() => {
   const { groupId } = useParams<{ groupId: string }>();
 
+  useEffect(() => {
+    groupsStore.fetchGroups();
+    contactsStore.fetchContacts();
+  }, []);
+
+  const { groups, isLoading: groupsLoading, error: groupsError } = groupsStore;
   const {
-    data: groups = [],
-    isLoading: groupsLoading,
-    error: groupsError,
-  } = useGetGroupsQuery();
-  const {
-    data: contacts = [],
+    contacts,
     isLoading: contactsLoading,
     error: contactsError,
-  } = useGetContactsQuery();
+  } = contactsStore;
 
   const group = groups.find(({ id }) => id === groupId);
   const groupContacts = group
