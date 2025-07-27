@@ -1,12 +1,11 @@
-import {Outlet, useLocation} from 'react-router-dom';
-import {Col, Container, Row} from 'react-bootstrap';
-import React from 'react';
-import {MainMenu} from './MainMenu';
-import {Breadcrumbs} from 'src/components/Breadcrumbs';
+import { Outlet, useLocation } from "react-router-dom";
+import { Col, Container, Row } from "react-bootstrap";
+import { Breadcrumbs } from "src/components/Breadcrumbs";
+import { MainMenu } from "src/components/MainMenu";
 
 export const Layout = () => {
   const location = useLocation();
-  const pathNames = location.pathname.split('/').filter((x) => x);
+  const pathNames = location.pathname.split("/").filter((x) => x);
 
   return (
     <Container>
@@ -15,17 +14,15 @@ export const Layout = () => {
           <MainMenu />
         </Col>
         <Col xxl={12}>
-          <Breadcrumbs pathNames={pathNames}/>
+          <Breadcrumbs pathNames={pathNames} />
         </Col>
         <Col xxl={12}>
           <Outlet />
         </Col>
         <Col xxl={12}>
-          <footer>
-
-          </footer>
+          <footer></footer>
         </Col>
       </Row>
     </Container>
   );
-}
+};
