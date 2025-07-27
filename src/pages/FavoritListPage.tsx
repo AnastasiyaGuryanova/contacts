@@ -1,16 +1,17 @@
-import { memo } from "react";
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Col, Row } from "react-bootstrap";
-import { useSelector } from "react-redux";
 import { ContactCard, Loader, ErrorMessage } from "src/components";
-import { useGetContactsQuery } from "src/redux/contacts";
-import { RootState } from "src/redux/store";
+import { contactsStore, favoritesStore } from "src/stores";
 
-export const FavoritListPage = memo(() => {
-  const { isLoading, error } = useGetContactsQuery();
+export const FavoritListPage = observer(() => {
+  const { isLoading, error } = contactsStore;
+  const { favorites, updateFavorites } = favoritesStore;
 
-  const { items: favoriteContacts } = useSelector(
-    (state: RootState) => state.favorites
-  );
+  useEffect(() => {
+    contactsStore.fetchContacts();
+    favoritesStore.updateFavorites();
+  }, [updateFavorites]);
 
   if (isLoading) {
     return <Loader />;
@@ -25,13 +26,13 @@ export const FavoritListPage = memo(() => {
     );
   }
 
-  if (!favoriteContacts.length) {
+  if (!favorites.length) {
     return <div>Избранных контактов нет.</div>;
   }
 
   return (
     <Row xxl={4} className="g-4">
-      {favoriteContacts.map((contact) => (
+      {favorites.map((contact) => (
         <Col key={contact.id}>
           <ContactCard contact={contact} withLink />
         </Col>

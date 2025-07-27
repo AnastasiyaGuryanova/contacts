@@ -1,13 +1,15 @@
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Col, Row } from "react-bootstrap";
 import { GroupContactsCard, Loader, ErrorMessage } from "src/components";
-import { useGetGroupsQuery } from "src/redux/groups";
+import { groupsStore } from "src/stores";
 
-export const GroupListPage = () => {
-  const {
-    data: groupContactsState = [],
-    isLoading,
-    error,
-  } = useGetGroupsQuery();
+export const GroupListPage = observer(() => {
+  const { groups, isLoading, error } = groupsStore;
+
+  useEffect(() => {
+    groupsStore.fetchGroups();
+  }, []);
 
   if (isLoading) {
     return <Loader />;
@@ -22,13 +24,17 @@ export const GroupListPage = () => {
     );
   }
 
+  if (!groups.length) {
+    return <div>Группы не найдены.</div>;
+  }
+
   return (
     <Row xxl={4}>
-      {groupContactsState.map((groupContacts) => (
+      {groups.map((groupContacts) => (
         <Col key={groupContacts.id}>
           <GroupContactsCard groupContacts={groupContacts} withLink />
         </Col>
       ))}
     </Row>
   );
-};
+});
