@@ -1,16 +1,15 @@
-import { useSelector } from "react-redux";
 import { Col, Row } from "react-bootstrap";
 import { GroupContactsCard, Loader, ErrorMessage } from "src/components";
-import { RootState } from "src/redux/reducers";
+import { useGetGroupsQuery } from "src/redux/groups";
 
 export const GroupListPage = () => {
   const {
-    items: groupContactsState,
-    loading,
+    data: groupContactsState = [],
+    isLoading,
     error,
-  } = useSelector((state: RootState) => state.groups);
+  } = useGetGroupsQuery();
 
-  if (loading) {
+  if (isLoading) {
     return <Loader />;
   }
 
@@ -18,7 +17,7 @@ export const GroupListPage = () => {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(error)}
       />
     );
   }
