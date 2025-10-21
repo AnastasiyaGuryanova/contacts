@@ -1,29 +1,19 @@
-import { memo, useEffect, useState } from "react";
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Col, Row } from "react-bootstrap";
-import { useSelector } from "react-redux";
 import { ContactCard, Loader, ErrorMessage } from "src/components";
-import { RootState } from "src/redux/reducers";
-import { ContactDto } from "src/types/dto";
+import { contactsStore, favoritesStore } from "src/stores";
 
-export const FavoritListPage = memo(() => {
-  const {
-    items: contactsState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.contacts);
-  const { items: favoriteContactsState } = useSelector(
-    (state: RootState) => state.favorites
-  );
-
-  const [contacts, setContacts] = useState<ContactDto[]>([]);
+export const FavoritListPage = observer(() => {
+  const { isLoading, error } = contactsStore;
+  const { favorites, updateFavorites } = favoritesStore;
 
   useEffect(() => {
-    setContacts(
-      contactsState.filter(({ id }) => favoriteContactsState.includes(id))
-    );
-  }, [contactsState, favoriteContactsState]);
+    contactsStore.fetchContacts();
+    favoritesStore.updateFavorites();
+  }, [updateFavorites]);
 
-  if (loading) {
+  if (isLoading) {
     return <Loader />;
   }
 
@@ -31,14 +21,18 @@ export const FavoritListPage = memo(() => {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(error)}
       />
     );
   }
 
+  if (!favorites.length) {
+    return <div>Избранных контактов нет.</div>;
+  }
+
   return (
     <Row xxl={4} className="g-4">
-      {contacts.map((contact) => (
+      {favorites.map((contact) => (
         <Col key={contact.id}>
           <ContactCard contact={contact} withLink />
         </Col>

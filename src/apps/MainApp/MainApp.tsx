@@ -1,9 +1,7 @@
-import { useEffect } from "react";
 import "./MainApp.scss";
 import { ThemeProvider } from "react-bootstrap";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "src/components/Layout";
-import { useDispatch } from "react-redux";
 import {
   ContactListPage,
   GroupPage,
@@ -11,17 +9,8 @@ import {
   FavoritListPage,
   GroupListPage,
 } from "src/pages";
-import { fetchContacts, fetchGroups, fetchFavorites } from "src/redux/thunks";
 
 export const MainApp = () => {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch<any>(fetchContacts());
-    dispatch<any>(fetchGroups());
-    dispatch<any>(fetchFavorites());
-  }, [dispatch]);
-
   return (
     <ThemeProvider
       breakpoints={["xxxl", "xxl", "xl", "lg", "md", "sm", "xs", "xxs"]}

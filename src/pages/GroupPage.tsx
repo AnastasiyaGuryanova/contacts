@@ -1,8 +1,7 @@
-import { memo, useEffect, useState } from "react";
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Col, Row } from "react-bootstrap";
-import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { ContactDto, GroupContactsDto } from "src/types/dto";
 import {
   GroupContactsCard,
   Loader,
@@ -10,72 +9,63 @@ import {
   ContactCard,
   ErrorMessage,
 } from "src/components";
-import { RootState } from "src/redux/reducers";
+import { contactsStore, groupsStore } from "src/stores";
 
-export const GroupPage = memo(() => {
+export const GroupPage = observer(() => {
   const { groupId } = useParams<{ groupId: string }>();
 
-  const {
-    items: groupContactsState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.groups);
-  const { items: contactsState } = useSelector(
-    (state: RootState) => state.contacts
-  );
-
-  const [contacts, setContacts] = useState<ContactDto[]>([]);
-  const [groupContacts, setGroupContacts] = useState<
-    GroupContactsDto | undefined
-  >(undefined);
-
   useEffect(() => {
-    const findGroup = groupContactsState.find(({ id }) => id === groupId);
-    setGroupContacts(findGroup);
-    setContacts(
-      findGroup
-        ? contactsState.filter(({ id }) => findGroup.contactIds.includes(id))
-        : []
-    );
-  }, [groupId, groupContactsState, contactsState]);
+    groupsStore.fetchGroups();
+    contactsStore.fetchContacts();
+  }, []);
 
-  if (loading) {
+  const { groups, isLoading: groupsLoading, error: groupsError } = groupsStore;
+  const {
+    contacts,
+    isLoading: contactsLoading,
+    error: contactsError,
+  } = contactsStore;
+
+  const group = groups.find(({ id }) => id === groupId);
+  const groupContacts = group
+    ? contacts.filter(({ id }) => group.contactIds.includes(id))
+    : [];
+
+  if (groupsLoading || contactsLoading) {
     return <Loader />;
   }
 
-  if (error) {
+  if (groupsError || contactsError) {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(groupsError || contactsError)}
       />
     );
   }
 
+  if (!group) {
+    return <Empty />;
+  }
+
   return (
     <Row className="g-4">
-      {groupContacts ? (
-        <>
-          <Col xxl={12}>
-            <Row xxl={3}>
-              <Col className="mx-auto">
-                <GroupContactsCard groupContacts={groupContacts} />
-              </Col>
-            </Row>
+      <Col xxl={12}>
+        <Row xxl={3}>
+          <Col className="mx-auto">
+            <GroupContactsCard groupContacts={group} />
           </Col>
-          <Col>
-            <Row xxl={4} className="g-4">
-              {contacts.map((contact) => (
-                <Col key={contact.id}>
-                  <ContactCard contact={contact} withLink />
-                </Col>
-              ))}
-            </Row>
-          </Col>
-        </>
-      ) : (
-        <Empty />
-      )}
+        </Row>
+      </Col>
+      <Col>
+        <Row xxl={4} className="g-4">
+          {groupContacts.map((contact) => (
+            <Col key={contact.id}>
+              <ContactCard contact={contact} withLink />
+            </Col>
+          ))}
+        </Row>
+      </Col>
     </Row>
   );
 });

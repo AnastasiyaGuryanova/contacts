@@ -1,4 +1,5 @@
-import { memo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { observer } from "mobx-react-lite";
 import { Col, Row } from "react-bootstrap";
 import {
   FilterForm,
@@ -7,27 +8,27 @@ import {
   Loader,
   ErrorMessage,
 } from "src/components";
-import { RootState } from "src/redux/reducers";
-import { useSelector } from "react-redux";
+import { contactsStore, groupsStore } from "src/stores";
 
-export const ContactListPage = memo(() => {
-  const {
-    items: contactsState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.contacts);
-  const { items: groupContactsState } = useSelector(
-    (state: RootState) => state.groups
-  );
+import { ContactDto } from "src/types/dto";
 
-  const [filteredContacts, setFilteredContacts] = useState(contactsState);
+export const ContactListPage = observer(() => {
+  const [filteredContacts, setFilteredContacts] = useState<ContactDto[]>([]);
+  const { contacts, isLoading, error } = contactsStore;
 
   useEffect(() => {
-    setFilteredContacts(contactsState);
-  }, [contactsState]);
+    contactsStore.fetchContacts();
+    groupsStore.fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    if (contacts.length) {
+      setFilteredContacts(contacts);
+    }
+  }, [contacts]);
 
   const onSubmit = (fv: Partial<FilterFormValues>): void => {
-    let findContacts = contactsState;
+    let findContacts: ContactDto[] = contacts;
 
     if (fv.name) {
       const fvName = fv.name.toLowerCase();
@@ -37,7 +38,7 @@ export const ContactListPage = memo(() => {
     }
 
     if (fv.groupId) {
-      const groupContacts = groupContactsState.find(
+      const groupContacts = groupsStore.groups.find(
         ({ id }) => id === fv.groupId
       );
 
@@ -51,20 +52,20 @@ export const ContactListPage = memo(() => {
     setFilteredContacts(findContacts);
   };
 
-  if (loading) {
+  if (isLoading || groupsStore.isLoading) {
     return <Loader />;
   }
 
-  if (error) {
+  if (error || groupsStore.error) {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(contactsStore.error || groupsStore.error)}
       />
     );
   }
 
-  if (!contactsState.length) {
+  if (!contacts.length) {
     return <div>Контакты не найдены.</div>;
   }
 
@@ -72,14 +73,14 @@ export const ContactListPage = memo(() => {
     <Row xxl={1}>
       <Col className="mb-3">
         <FilterForm
-          groupContactsList={groupContactsState}
+          groupContactsList={groupsStore.groups}
           initialValues={{}}
           onSubmit={onSubmit}
         />
       </Col>
       <Col>
         <Row xxl={4} className="g-4">
-          {filteredContacts.map((contact) => (
+          {filteredContacts.map((contact: ContactDto) => (
             <Col key={contact.id}>
               <ContactCard contact={contact} withLink />
             </Col>

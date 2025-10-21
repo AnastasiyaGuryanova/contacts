@@ -1,16 +1,17 @@
-import { useSelector } from "react-redux";
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { Col, Row } from "react-bootstrap";
 import { GroupContactsCard, Loader, ErrorMessage } from "src/components";
-import { RootState } from "src/redux/reducers";
+import { groupsStore } from "src/stores";
 
-export const GroupListPage = () => {
-  const {
-    items: groupContactsState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.groups);
+export const GroupListPage = observer(() => {
+  const { groups, isLoading, error } = groupsStore;
 
-  if (loading) {
+  useEffect(() => {
+    groupsStore.fetchGroups();
+  }, []);
+
+  if (isLoading) {
     return <Loader />;
   }
 
@@ -18,18 +19,22 @@ export const GroupListPage = () => {
     return (
       <ErrorMessage
         message="Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже."
-        logError={error}
+        logError={String(error)}
       />
     );
   }
 
+  if (!groups.length) {
+    return <div>Группы не найдены.</div>;
+  }
+
   return (
     <Row xxl={4}>
-      {groupContactsState.map((groupContacts) => (
+      {groups.map((groupContacts) => (
         <Col key={groupContacts.id}>
           <GroupContactsCard groupContacts={groupContacts} withLink />
         </Col>
       ))}
     </Row>
   );
-};
+});
